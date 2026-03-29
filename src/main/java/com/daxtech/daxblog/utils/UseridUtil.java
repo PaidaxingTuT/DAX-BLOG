@@ -1,7 +1,7 @@
 package com.daxtech.daxblog.utils;
 
 
-public class useridUtil {
+public class UseridUtil {
 
     private static final String HEAD = "USER-";
 

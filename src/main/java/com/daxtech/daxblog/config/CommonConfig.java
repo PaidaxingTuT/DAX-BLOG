@@ -10,7 +10,7 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 @RequiredArgsConstructor
-public class commonConfig {
+public class CommonConfig {
 
     private final OpenAiChatModel model;
 
