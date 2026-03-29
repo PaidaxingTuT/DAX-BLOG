@@ -1,14 +1,15 @@
 package com.daxtech.daxblog.service;
 
-import dev.langchain4j.service.UserMessage;
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
 
+@Service
 @RequiredArgsConstructor
 public class ChatService {
 
     private final AIService aiService;
 
-    public String getMessage(@UserMessage String userMessage) {
+    public String getMessage(String userMessage) {
         try{
             return aiService.chat(userMessage);
         } catch (Exception e){

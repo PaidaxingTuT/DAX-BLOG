@@ -1,6 +1,6 @@
 package com.daxtech.daxblog.controller;
 
-import com.daxtech.daxblog.service.AIService;
+import com.daxtech.daxblog.service.ChatService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -12,11 +12,11 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class chatController {
 
-    private AIService AIService;
+    private final ChatService chatService;
 
     @GetMapping("/ask")
     public String chat(@RequestParam String message) {
-        return AIService.chat(message);
+        return chatService.getMessage(message);
 
     }
 }
