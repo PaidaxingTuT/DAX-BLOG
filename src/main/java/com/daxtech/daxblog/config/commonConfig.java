@@ -12,7 +12,7 @@ import org.springframework.context.annotation.Configuration;
 @RequiredArgsConstructor
 public class commonConfig {
 
-    private OpenAiChatModel model;
+    private final OpenAiChatModel model;
 
     @Bean
     public AIService aiService() {

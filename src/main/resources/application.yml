@@ -12,7 +12,7 @@ langchain4j:
   openai:
     chat-model:
       base-url: https://api.deepseek.com
-      api-key: sk-216e1677378d46e083e2e5639da4606c
+      api-key: ${DEEPSEEK_API_KEY}
       model-name: deepseek-chat
       temperature: 0.0
       top-p: 0.1
