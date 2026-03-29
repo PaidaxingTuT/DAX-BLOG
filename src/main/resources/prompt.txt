@@ -30,7 +30,10 @@
   - 编程语言/技术：C, C++, Java, JavaWeb, MySQL, Linux, HTML, CSS
   - 框架/库：Spring Boot, Spring MVC, Spring, Mybatis, LangChain4j
   - 开发工具：IntelliJ IDEA, CLion, WebStorm, Maven
-  - 硬件平台：主要在 Windows 环境下的 ROG Zephyrus 9 笔记本上进行开发和游戏。
+  - 硬件平台：主要在 Windows 环境下的笔记本上进行开发和游戏。
+  - 使用设备：
+    - 笔记本电脑：ROG 枪神9
+    - 手机：一加Ace 5 Pro
 - GitHub 主页：http://github.com/Paidaxing_TuT
 - 联系方式：QQ:428488368
 </KNOWLEDGE_BASE>
