@@ -1,0 +1,21 @@
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/daxblog?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
+    username: root
+    password: 114514
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+mybatis:
+  mapper-locations: classpath:mapper/*.xml
+
+langchain4j:
+  openai:
+    chat-model:
+      base-url: https://api.deepseek.com
+      api-key: sk-216e1677378d46e083e2e5639da4606c
+      model-name: deepseek-chat
+      temperature: 0.0
+      top-p: 0.1
+
+server:
+  port: 8080
