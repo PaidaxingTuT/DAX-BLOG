@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+  <title>AI 助手</title>
+  <style>
+    :root {
+      --primary-color: #007bff;
+      --bg-color: #f4f7f6;
+      --chat-bg: #ffffff;
+      --text-color: #333;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg-color);
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      /* 桌面端高度 */
+      height: 100vh;
+    }
+
+    /* --- 容器默认样式 (桌面端) --- */
+    .chat-container {
+      width: 100%;
+      max-width: 450px;
+      height: 85vh;
+      background: var(--chat-bg);
+      border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .chat-header {
+      background-color: var(--primary-color);
+      color: white;
+      padding: 16px;
+      text-align: center;
+      font-size: 1.1em;
+      font-weight: 600;
+      /* 适配刘海屏顶部安全区 */
+      padding-top: calc(16px + env(safe-area-inset-top));
+    }
+
+    .chat-messages {
+      flex: 1;
+      padding: 15px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      /* 平滑滚动体验 */
+      scroll-behavior: smooth;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .message {
+      max-width: 85%;
+      padding: 12px 16px;
+      border-radius: 18px;
+      font-size: 0.95em;
+      line-height: 1.5;
+      word-wrap: break-word;
+    }
+
+    .message.user {
+      align-self: flex-end;
+      background-color: var(--primary-color);
+      color: white;
+      border-bottom-right-radius: 4px;
+    }
+
+    .message.ai {
+      align-self: flex-start;
+      background-color: #f1f3f5;
+      color: var(--text-color);
+      border-bottom-left-radius: 4px;
+    }
+
+    .thinking {
+      font-style: italic;
+      color: #888;
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0% { opacity: 0.5; }
+      50% { opacity: 1; }
+      100% { opacity: 0.5; }
+    }
+
+    .chat-input-area {
+      display: flex;
+      padding: 12px 15px;
+      background: #fff;
+      border-top: 1px solid #eee;
+      /* 适配 iPhone 底部小黑条安全区 */
+      padding-bottom: calc(12px + env(safe-area-inset-bottom));
+    }
+
+    .chat-input-area input {
+      flex: 1;
+      padding: 12px 15px;
+      border: 1px solid #ddd;
+      border-radius: 24px;
+      outline: none;
+      font-size: 1em;
+      transition: border-color 0.3s;
+      /* 防止 iOS 输入框内阴影 */
+      -webkit-appearance: none;
+    }
+
+    .chat-input-area input:focus {
+      border-color: var(--primary-color);
+    }
+
+    .chat-input-area button {
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      border-radius: 24px;
+      padding: 0 20px;
+      margin-left: 10px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 1em;
+      transition: background-color 0.2s;
+      /* 增加移动端触控面积 */
+      min-width: 70px;
+    }
+
+    .chat-input-area button:hover {
+      background-color: #0056b3;
+    }
+
+    .chat-input-area button:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
+
+    /* --- 核心适配 2：移动端专属响应式布局 --- */
+    @media (max-width: 600px) {
+      body {
+        /* 背景色与聊天框融为一体 */
+        background-color: var(--chat-bg);
+      }
+      .chat-container {
+        width: 100vw;
+        max-width: 100%;
+        /* 使用 dvh (Dynamic Viewport Height) 完美解决移动端浏览器地址栏收缩导致的高度跳动问题 */
+        height: 100vh;
+        height: 100dvh;
+        border-radius: 0;
+        box-shadow: none;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="chat-container">
+  <div class="chat-header">派大星的专属 AI</div>
+  <div class="chat-messages" id="chat-messages">
+    <div class="message ai">你好！我是派大星的 AI 助手，有什么关于他的问题想问我吗？</div>
+  </div>
+  <div class="chat-input-area">
+    <input type="text" id="user-input" placeholder="输入你想问的问题..." onkeypress="handleKeyPress(event)">
+    <button id="send-btn" onclick="sendMessage()">发送</button>
+  </div>
+</div>
+
+<script>
+  const messagesContainer = document.getElementById('chat-messages');
+  const inputField = document.getElementById('user-input');
+  const sendBtn = document.getElementById('send-btn');
+  let isWaiting = false;
+
+  function handleKeyPress(event) {
+    if (event.key === 'Enter') {
+      sendMessage();
+      // 在移动端按下回车发送后，主动收起键盘以留出阅读视野
+      inputField.blur();
+    }
+  }
+
+  async function sendMessage() {
+    const text = inputField.value.trim();
+    if (!text || isWaiting) return;
+
+    appendMessage('user', text);
+    inputField.value = '';
+
+    setWaitingState(true);
+    const thinkingId = appendThinkingMessage();
+
+    try {
+      // 已使用相对路径解决跨域
+      const response = await fetch('/api/ask?message=' + encodeURIComponent(text));
+      const result = await response.json();
+
+      removeMessage(thinkingId);
+
+      if (result.code === "200" || result.code === "500") {
+        appendMessage('ai', result.data);
+      } else {
+        appendMessage('ai', "未知错误格式：" + JSON.stringify(result));
+      }
+
+    } catch (error) {
+      removeMessage(thinkingId);
+      appendMessage('ai', "网络连接失败，请检查后端服务状态。");
+      console.error(error);
+    } finally {
+      setWaitingState(false);
+      scrollToBottom();
+    }
+  }
+
+  function appendMessage(sender, text) {
+    const msgDiv = document.createElement('div');
+    msgDiv.className = `message ${sender}`;
+    msgDiv.textContent = text;
+    messagesContainer.appendChild(msgDiv);
+    scrollToBottom();
+  }
+
+  function appendThinkingMessage() {
+    const id = 'thinking-' + Date.now();
+    const msgDiv = document.createElement('div');
+    msgDiv.className = `message ai thinking`;
+    msgDiv.id = id;
+    msgDiv.textContent = '思考中...';
+    messagesContainer.appendChild(msgDiv);
+    scrollToBottom();
+    return id;
+  }
+
+  function removeMessage(id) {
+    const el = document.getElementById(id);
+    if (el) el.remove();
+  }
+
+  function scrollToBottom() {
+    // 使用 requestAnimationFrame 确保在 DOM 渲染完毕后再滚动到底部
+    requestAnimationFrame(() => {
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    });
+  }
+
+  function setWaitingState(waiting) {
+    isWaiting = waiting;
+    sendBtn.disabled = waiting;
+    // 移动端体验优化：等待回复时不要禁用输入框，否则会导致虚拟键盘频繁闪烁弹起和收回
+    if (waiting) {
+      sendBtn.textContent = '...';
+    } else {
+      sendBtn.textContent = '发送';
+      // 发送完毕后自动让输入框重新获得焦点（可选体验）
+      inputField.focus();
+    }
+  }
+</script>
+
+</body>
+</html>
