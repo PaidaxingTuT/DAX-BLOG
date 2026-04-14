@@ -1,8 +1,8 @@
 spring:
   datasource:
-    url: jdbc:mysql://localhost:3306/daxblog?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
-    username: root
-    password: 114514
+    url: jdbc:mysql://127.0.0.1:3306/daxblog?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
+    username: daxblog
+    password: AA5NR5dmTiCYxED2
     driver-class-name: com.mysql.cj.jdbc.Driver
 
 mybatis:
@@ -18,4 +18,11 @@ langchain4j:
       top-p: 0.1
 
 server:
-  port: 8080
+  port: 8713
+
+api:
+  weather:
+    base-url: "https://v2.xxapi.cn/api/weather"
+    key: "7a0da87f193a74e9"
+  oil:
+    base-url: "https://v2.xxapi.cn/api/oilPrice"

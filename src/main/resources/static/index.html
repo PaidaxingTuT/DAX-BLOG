@@ -1,269 +1,243 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
-  <title>AI 助手</title>
-  <style>
-    :root {
-      --primary-color: #007bff;
-      --bg-color: #f4f7f6;
-      --chat-bg: #ffffff;
-      --text-color: #333;
-    }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-      background-color: var(--bg-color);
-      margin: 0;
-      padding: 0;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      /* 桌面端高度 */
-      height: 100vh;
-    }
+    <meta charset="UTF-8">
+    <title>AI 助手 - 派大星</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #f0f2f5;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            height: 100vh;
+            box-sizing: border-box;
+        }
 
-    /* --- 容器默认样式 (桌面端) --- */
-    .chat-container {
-      width: 100%;
-      max-width: 450px;
-      height: 85vh;
-      background: var(--chat-bg);
-      border-radius: 12px;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.1);
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-    }
+        #app {
+            width: 100%;
+            max-width: 600px;
+            background: #fff;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
 
-    .chat-header {
-      background-color: var(--primary-color);
-      color: white;
-      padding: 16px;
-      text-align: center;
-      font-size: 1.1em;
-      font-weight: 600;
-      /* 适配刘海屏顶部安全区 */
-      padding-top: calc(16px + env(safe-area-inset-top));
-    }
+        .header {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            background: #fff;
+        }
 
-    .chat-messages {
-      flex: 1;
-      padding: 15px;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      gap: 15px;
-      /* 平滑滚动体验 */
-      scroll-behavior: smooth;
-      -webkit-overflow-scrolling: touch;
-    }
+        /* 方案一：将 a 标签伪装成按钮 */
+        .header .btn-link {
+            display: inline-block;
+            padding: 8px 16px;
+            background: #409eff;
+            color: #fff;
+            text-decoration: none; /* 去掉 a 标签下划线 */
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 500;
+            transition: background 0.2s;
+            cursor: pointer;
+        }
 
-    .message {
-      max-width: 85%;
-      padding: 12px 16px;
-      border-radius: 18px;
-      font-size: 0.95em;
-      line-height: 1.5;
-      word-wrap: break-word;
-    }
+        .header .btn-link:hover {
+            background: #66b1ff;
+        }
 
-    .message.user {
-      align-self: flex-end;
-      background-color: var(--primary-color);
-      color: white;
-      border-bottom-right-radius: 4px;
-    }
+        .chat-window {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            background: #fafafa;
+        }
 
-    .message.ai {
-      align-self: flex-start;
-      background-color: #f1f3f5;
-      color: var(--text-color);
-      border-bottom-left-radius: 4px;
-    }
+        .msg-row {
+            display: flex;
+            margin-bottom: 15px;
+        }
 
-    .thinking {
-      font-style: italic;
-      color: #888;
-      animation: pulse 1.5s infinite;
-    }
+        .msg-row.user {
+            justify-content: flex-end;
+        }
 
-    @keyframes pulse {
-      0% { opacity: 0.5; }
-      50% { opacity: 1; }
-      100% { opacity: 0.5; }
-    }
+        .bubble {
+            max-width: 80%;
+            padding: 10px 14px;
+            border-radius: 6px;
+            line-height: 1.5;
+            font-size: 14px;
+            word-wrap: break-word;
+            white-space: pre-wrap;
+        }
 
-    .chat-input-area {
-      display: flex;
-      padding: 12px 15px;
-      background: #fff;
-      border-top: 1px solid #eee;
-      /* 适配 iPhone 底部小黑条安全区 */
-      padding-bottom: calc(12px + env(safe-area-inset-bottom));
-    }
+        .ai .bubble {
+            background: #fff;
+            border: 1px solid #eee;
+            color: #333;
+        }
 
-    .chat-input-area input {
-      flex: 1;
-      padding: 12px 15px;
-      border: 1px solid #ddd;
-      border-radius: 24px;
-      outline: none;
-      font-size: 1em;
-      transition: border-color 0.3s;
-      /* 防止 iOS 输入框内阴影 */
-      -webkit-appearance: none;
-    }
+        .user .bubble {
+            background: #409eff;
+            color: #fff;
+        }
 
-    .chat-input-area input:focus {
-      border-color: var(--primary-color);
-    }
+        /* 极简思考动画气泡 */
+        .thinking {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 0;
+        }
 
-    .chat-input-area button {
-      background-color: var(--primary-color);
-      color: white;
-      border: none;
-      border-radius: 24px;
-      padding: 0 20px;
-      margin-left: 10px;
-      cursor: pointer;
-      font-weight: 600;
-      font-size: 1em;
-      transition: background-color 0.2s;
-      /* 增加移动端触控面积 */
-      min-width: 70px;
-    }
+        .dot {
+            width: 6px;
+            height: 6px;
+            background: #ccc;
+            border-radius: 50%;
+            animation: bounce 1.4s infinite ease-in-out;
+        }
+        .dot:nth-child(2) { animation-delay: 0.2s; }
+        .dot:nth-child(3) { animation-delay: 0.4s; }
 
-    .chat-input-area button:hover {
-      background-color: #0056b3;
-    }
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1.0); }
+        }
 
-    .chat-input-area button:disabled {
-      background-color: #ccc;
-      cursor: not-allowed;
-    }
+        .input-area {
+            display: flex;
+            padding: 15px;
+            border-top: 1px solid #eee;
+            background: #fff;
+        }
 
-    /* --- 核心适配 2：移动端专属响应式布局 --- */
-    @media (max-width: 600px) {
-      body {
-        /* 背景色与聊天框融为一体 */
-        background-color: var(--chat-bg);
-      }
-      .chat-container {
-        width: 100vw;
-        max-width: 100%;
-        /* 使用 dvh (Dynamic Viewport Height) 完美解决移动端浏览器地址栏收缩导致的高度跳动问题 */
-        height: 100vh;
-        height: 100dvh;
-        border-radius: 0;
-        box-shadow: none;
-      }
-    }
-  </style>
+        .input-area input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            outline: none;
+            font-size: 14px;
+        }
+
+        .input-area button {
+            margin-left: 10px;
+            padding: 0 20px;
+            background: #67c23a;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: opacity 0.2s;
+        }
+
+        .input-area button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+    </style>
 </head>
 <body>
 
-<div class="chat-container">
-  <div class="chat-header">派大星的专属 AI</div>
-  <div class="chat-messages" id="chat-messages">
-    <div class="message ai">你好！我是派大星的 AI 助手，有什么关于他的问题想问我吗？</div>
-  </div>
-  <div class="chat-input-area">
-    <input type="text" id="user-input" placeholder="输入你想问的问题..." onkeypress="handleKeyPress(event)">
-    <button id="send-btn" onclick="sendMessage()">发送</button>
-  </div>
+<div id="app">
+    <div class="header">
+        <a href="javascript:location.reload();" class="btn-link">全能 AI 助理</a>
+    </div>
+
+    <div class="chat-window" ref="chatWin">
+        <div v-for="(msg, index) in chatList" :key="index" :class="['msg-row', msg.type]">
+            <div class="bubble">
+                <template v-if="msg.type === 'thinking'">
+                    <div class="thinking">
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                    </div>
+                </template>
+                <template v-else>
+                    <span v-html="msg.content"></span>
+                </template>
+            </div>
+        </div>
+    </div>
+
+    <div class="input-area">
+        <input
+                type="text"
+                v-model="inputText"
+                @keyup.enter="sendMessage"
+                placeholder="问问派大星、天气或油价..."
+                :disabled="loading"
+        />
+        <button @click="sendMessage" :disabled="loading">发送</button>
+    </div>
 </div>
 
 <script>
-  const messagesContainer = document.getElementById('chat-messages');
-  const inputField = document.getElementById('user-input');
-  const sendBtn = document.getElementById('send-btn');
-  let isWaiting = false;
+    const { createApp, ref, nextTick, onMounted } = Vue;
 
-  function handleKeyPress(event) {
-    if (event.key === 'Enter') {
-      sendMessage();
-      // 在移动端按下回车发送后，主动收起键盘以留出阅读视野
-      inputField.blur();
-    }
-  }
+    createApp({
+        setup() {
+            const chatList = ref([]);
+            const inputText = ref('');
+            const loading = ref(false);
+            const chatWin = ref(null);
 
-  async function sendMessage() {
-    const text = inputField.value.trim();
-    if (!text || isWaiting) return;
+            const initChat = () => {
+                chatList.value.push({
+                    type: 'ai',
+                    content: '你好！我是派大星的 AI 助手，很高兴为你服务。'
+                });
+            };
 
-    appendMessage('user', text);
-    inputField.value = '';
+            const scrollToBottom = () => {
+                nextTick(() => {
+                    if (chatWin.value) {
+                        chatWin.value.scrollTop = chatWin.value.scrollHeight;
+                    }
+                });
+            };
 
-    setWaitingState(true);
-    const thinkingId = appendThinkingMessage();
+            const sendMessage = async () => {
+                const text = inputText.value.trim();
+                if (!text || loading.value) return;
 
-    try {
-      // 已使用相对路径解决跨域
-      const response = await fetch('/api/ask?message=' + encodeURIComponent(text));
-      const result = await response.json();
+                chatList.value.push({ type: 'user', content: text });
+                inputText.value = '';
 
-      removeMessage(thinkingId);
+                loading.value = true;
+                chatList.value.push({ type: 'thinking', content: '' });
+                scrollToBottom();
 
-      if (result.code === "200" || result.code === "500") {
-        appendMessage('ai', result.data);
-      } else {
-        appendMessage('ai', "未知错误格式：" + JSON.stringify(result));
-      }
+                try {
+                    
+                    const response = await fetch(`/state?message=${encodeURIComponent(text)}`);
+                    const resJson = await response.json();
 
-    } catch (error) {
-      removeMessage(thinkingId);
-      appendMessage('ai', "网络连接失败，请检查后端服务状态。");
-      console.error(error);
-    } finally {
-      setWaitingState(false);
-      scrollToBottom();
-    }
-  }
+                    chatList.value.pop(); 
+                    chatList.value.push({ type: 'ai', content: resJson.data || '暂无回应' });
+                } catch (error) {
+                    chatList.value.pop();
+                    chatList.value.push({ type: 'ai', content: '网络错误，请检查后端接口。' });
+                } finally {
+                    loading.value = false;
+                    scrollToBottom();
+                }
+            };
 
-  function appendMessage(sender, text) {
-    const msgDiv = document.createElement('div');
-    msgDiv.className = `message ${sender}`;
-    msgDiv.textContent = text;
-    messagesContainer.appendChild(msgDiv);
-    scrollToBottom();
-  }
+            onMounted(initChat);
 
-  function appendThinkingMessage() {
-    const id = 'thinking-' + Date.now();
-    const msgDiv = document.createElement('div');
-    msgDiv.className = `message ai thinking`;
-    msgDiv.id = id;
-    msgDiv.textContent = '思考中...';
-    messagesContainer.appendChild(msgDiv);
-    scrollToBottom();
-    return id;
-  }
-
-  function removeMessage(id) {
-    const el = document.getElementById(id);
-    if (el) el.remove();
-  }
-
-  function scrollToBottom() {
-    // 使用 requestAnimationFrame 确保在 DOM 渲染完毕后再滚动到底部
-    requestAnimationFrame(() => {
-      messagesContainer.scrollTop = messagesContainer.scrollHeight;
-    });
-  }
-
-  function setWaitingState(waiting) {
-    isWaiting = waiting;
-    sendBtn.disabled = waiting;
-    // 移动端体验优化：等待回复时不要禁用输入框，否则会导致虚拟键盘频繁闪烁弹起和收回
-    if (waiting) {
-      sendBtn.textContent = '...';
-    } else {
-      sendBtn.textContent = '发送';
-      // 发送完毕后自动让输入框重新获得焦点（可选体验）
-      inputField.focus();
-    }
-  }
+            return { chatList, inputText, loading, sendMessage, chatWin };
+        }
+    }).mount('#app');
 </script>
 
 </body>
